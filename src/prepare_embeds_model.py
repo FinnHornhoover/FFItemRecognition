@@ -393,7 +393,17 @@ def main() -> None:
         # remove the pack zip
         pack_zip_path.unlink()
 
+    # copy icon assets to the output directory
+    icon_source_path = pack_dir_path / "icons"
+    icon_dest_path = output_embeddings_path.parent / "icons"
+    if icon_dest_path.is_dir():
+        shutil.rmtree(icon_dest_path)
+    shutil.copytree(icon_source_path, icon_dest_path)
+
+    # fetch item prices if possible
     item_prices = construct_item_prices(args.google_service_account_json)
+
+    # construct the index and embedder
     construct_index_and_embedder(
         pack_dir_path,
         resource_path,
