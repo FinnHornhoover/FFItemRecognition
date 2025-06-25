@@ -1,0 +1,221 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Button Group */
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  justify-content: center;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Modal Container */
+.modal-container {
+  position: relative;
+  background: #242424;
+  padding: 32px 24px 24px 24px;
+  border-radius: 16px;
+  min-width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.25);
+  width: 400px;
+  box-sizing: border-box;
+}
+
+/* Modal Close Button */
+.modal-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.0rem;
+  cursor: pointer;
+  color: #888;
+}
+
+/* Modal Title */
+.modal-title {
+  margin: 0 0 18px 0;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+/* Search Input */
+.search-input {
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 10px;
+  border: 1.5px solid #bbb;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  box-sizing: border-box;
+  transition: border 0.2s;
+}
+
+.search-input:focus {
+  border: 1.5px solid #888;
+}
+
+/* No Results Message */
+.no-results {
+  color: #888;
+  text-align: center;
+  margin: 16px 0;
+}
+
+/* Search Result Item */
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #242424;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.search-result-item:hover {
+  background: #484848;
+}
+
+/* Item Icon Container */
+.item-icon-container {
+  width: 40px;
+  height: 40px;
+  background: url(/inv_empty.png) no-repeat center center;
+  background-size: contain;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-icon-container-large {
+  width: 64px;
+  height: 64px;
+  background: url(/inv_empty.png) no-repeat center center;
+  background-size: contain;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Item Name */
+.item-name {
+  font-weight: 500;
+}
+
+/* Item Details */
+.item-details {
+  color: #666;
+  font-size: 0.95em;
+  margin-left: auto;
+}
+
+/* Modal Close Button */
+.modal-close-btn-bottom {
+  margin-top: 16px;
+}
+
+/* Drag and Drop Area */
+.drag-drop-area {
+  border: 2px dashed #666;
+  border-radius: 12px;
+  padding: 15px 10px;
+  margin-bottom: 20px;
+  background: #1a1a1a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.drag-drop-area:hover {
+  border-color: #888;
+  background: #242424;
+}
+
+.drag-drop-area.drag-over {
+  border-color: #646cff;
+  background: #2a2a2a;
+  transform: scale(1.02);
+}
+
+.drag-drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.drag-drop-icon {
+  font-size: 2.5rem;
+  opacity: 0.7;
+}
+
+.drag-drop-text {
+  text-align: center;
+  color: #888;
+  line-height: 1.4;
+}
+
+.drag-drop-text strong {
+  color: #fff;
+}
