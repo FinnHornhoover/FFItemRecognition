@@ -303,6 +303,11 @@ function App() {
         </div>
       </div>
 
+      {/* Import Warning */}
+      <div className="import-warning">
+        ⚠️ After importing, check <span className="warning-asterisk">*</span> labeled items, their quantities and prices.
+      </div>
+
       {/* Hidden file input */}
       <input
         id="file-input"

@@ -220,6 +220,24 @@
   color: #fff;
 }
 
+/* Import Warning */
+.import-warning {
+  text-align: center;
+  color: #ffa500;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: rgba(255, 165, 0, 0.1);
+  border-radius: 6px;
+  border-left: 3px solid #ffa500;
+}
+
+.warning-asterisk {
+  color: #646cff;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
 /* Loading Overlay */
 .loading-overlay {
   position: fixed;
