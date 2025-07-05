@@ -97,40 +97,38 @@ async function findSquares(src) {
   let squares = [];
 
   for (const square of filteredSquares) {
-    if (square.y + 5 * square.height / 4 > src.rows) {
-      continue;
-    }
-
     let extraInfo = {};
 
-    let roi = src.roi({x: square.x, y: square.y + square.height, width: square.width, height: square.height / 4});
-    let dsize = new cv.Size(square.width * 4, square.height);
-    cv.resize(roi, roi, dsize, 0, 0, cv.INTER_LINEAR);
-    cv.cvtColor(roi, roi, cv.COLOR_BGR2GRAY);
-    let canvas = document.createElement('canvas');
-    cv.imshow(canvas, roi);
-    roi.delete();
+    if (square.y + 5 * square.height / 4 <= src.rows) {
+      let roi = src.roi({x: square.x, y: square.y + square.height, width: square.width, height: square.height / 4});
+      let dsize = new cv.Size(square.width * 4, square.height);
+      cv.resize(roi, roi, dsize, 0, 0, cv.INTER_LINEAR);
+      cv.cvtColor(roi, roi, cv.COLOR_BGR2GRAY);
+      let canvas = document.createElement('canvas');
+      cv.imshow(canvas, roi);
+      roi.delete();
 
-    try {
-      const { data: { text }} = await worker.recognize(canvas);
+      try {
+        const { data: { text }} = await worker.recognize(canvas);
 
-      const xSplit = text.split('x');
-      if (xSplit.length > 1) {
-        const quantity = xSplit[0].trim();
-        extraInfo.quantity = parseInt(quantity);
+        const xSplit = text.split('x');
+        if (xSplit.length > 1) {
+          const quantity = xSplit[0].trim();
+          extraInfo.quantity = parseInt(quantity);
+        }
+
+        if (text.toLowerCase().includes('k')) {
+          const price = xSplit[xSplit.length - 1].toLowerCase().split('k')[0].trim();
+          extraInfo.price = fromPriceString(price + 'k');
+        }
+
+        if (text.toLowerCase().includes('m')) {
+          const price = xSplit[xSplit.length - 1].toLowerCase().split('m')[0].trim();
+          extraInfo.price = fromPriceString(price + 'M');
+        }
+      } catch (e) {
+        console.log(e);
       }
-
-      if (text.toLowerCase().includes('k')) {
-        const price = xSplit[xSplit.length - 1].toLowerCase().split('k')[0].trim();
-        extraInfo.price = fromPriceString(price + 'k');
-      }
-
-      if (text.toLowerCase().includes('m')) {
-        const price = xSplit[xSplit.length - 1].toLowerCase().split('m')[0].trim();
-        extraInfo.price = fromPriceString(price + 'M');
-      }
-    } catch (e) {
-      console.log(e);
     }
 
     squares.push({...square, extraInfo});
