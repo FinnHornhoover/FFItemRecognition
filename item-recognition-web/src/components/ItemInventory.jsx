@@ -51,7 +51,7 @@ const ItemInventory = ({ newResults, onInventoryChange }) => {
         return updated.sort((a, b) => {
           if (a.isNew && !b.isNew) return -1;
           if (!a.isNew && b.isNew) return 1;
-          return a.itemInfo.Name.localeCompare(b.itemInfo.Name);
+          return 0;
         });
       });
     }
