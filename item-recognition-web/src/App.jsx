@@ -15,6 +15,7 @@ function App() {
   const [inventoryKey, setInventoryKey] = useState(0); // for resetting inventory
   const [currentInventory, setCurrentInventory] = useState([]);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     loadModel('/embedder.onnx');
@@ -48,10 +49,12 @@ function App() {
 
     setResults(output);
     setNewResults(output); // Pass to inventory
+    setIsProcessing(false); // Stop loading spinner
   };
 
   const handleFileUpload = async (file) => {
     if (!file) return;
+    setIsProcessing(true); // Start loading spinner
     const tensors = await preprocessImage(file);
     handleEmbedReady(tensors);
 
@@ -271,6 +274,16 @@ function App() {
     <>
     <div>
       <h1>Retrobution Shoplist</h1>
+
+      {/* Loading Spinner */}
+      {isProcessing && (
+        <div className="loading-overlay">
+          <div className="loading-spinner">
+            <div className="spinner"></div>
+            <div className="loading-text">Processing image...</div>
+          </div>
+        </div>
+      )}
 
       {/* Drag and Drop Area */}
       <div
