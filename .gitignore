@@ -197,7 +197,7 @@ cython_debug/
 output/
 
 # test files
-test_images/
+*images*/
 
 # unpacked folder
 unpacked_*/
