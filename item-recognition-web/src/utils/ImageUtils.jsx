@@ -530,7 +530,7 @@ function findSquaresThresholding(src) {
 }
 
 function findSquaresDominantLines(src) {
-  let clusterLists = extractPotentialGridLines(src, 200);
+  let clusterLists = extractPotentialGridLines(src, 160);
 
   if (clusterLists.length < 2) {
     return [];
