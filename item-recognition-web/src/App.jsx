@@ -111,7 +111,7 @@ function App() {
     : [];
 
   const handleAddItem = (label, info) => {
-    setNewResults([{ label, distance: 0, itemInfo: info, updateTime: Date.now(), extraInfo: { quantity: 1, price: 30000 } }]);
+    setNewResults([{ label, distance: 0, itemInfo: info, updateTime: Date.now(), extraInfo: { quantity: 1 } }]);
     setShowAddModal(false);
     setSearchTerm('');
   };
