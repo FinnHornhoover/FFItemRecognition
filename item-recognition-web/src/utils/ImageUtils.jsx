@@ -1,6 +1,9 @@
 import { createWorker, PSM } from 'tesseract.js';
 import { fromPriceString } from './PriceConversion';
 
+const MAX_WIDTH = 4096;
+const MAX_HEIGHT = 4096;
+
 function lineLength(coords) {
   return Math.sqrt((coords[0] - coords[2]) ** 2 + (coords[1] - coords[3]) ** 2);
 }
@@ -379,7 +382,9 @@ function adjustHomographyToView(src, H) {
 
   let H_adj = T.mul(H, 1.0);
 
-  let newSize = new cv.Size(maxX - minX, maxY - minY);
+  let newWidth = Math.min(maxX - minX, MAX_WIDTH);
+  let newHeight = Math.min(maxY - minY, MAX_HEIGHT);
+  let newSize = new cv.Size(newWidth, newHeight);
 
   // Cleanup
   corners.delete();

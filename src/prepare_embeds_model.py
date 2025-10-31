@@ -141,6 +141,12 @@ def construct_index_and_embedder(
     selected_bank_background_img = cv2.cvtColor(
         selected_bank_background_img, cv2.COLOR_BGR2RGB
     )
+    retrobution_placeholder_img = cv2.imread(
+        resource_path / "retrobution_placeholder.png", cv2.IMREAD_COLOR
+    )
+    retrobution_placeholder_img = cv2.cvtColor(
+        retrobution_placeholder_img, cv2.COLOR_BGR2RGB
+    )
     null_img = np.zeros_like(background_img)
 
     with torch.no_grad():
@@ -149,6 +155,7 @@ def construct_index_and_embedder(
         add_embedding(red_background_img, ["00::0000"])
         add_embedding(bank_background_img, ["00::0000"])
         add_embedding(selected_bank_background_img, ["00::0000"])
+        add_embedding(retrobution_placeholder_img, ["00::0000"])
 
     with open(pack_dir_path / "info" / "item_info.json", "r") as f:
         item_info = json.load(f)
@@ -358,7 +365,7 @@ def main() -> None:
     parser.add_argument(
         "--output-labels-path", type=str, default="item-recognition-web/src/labels"
     )
-    parser.add_argument("--input-pack-zip", type=str, default="retrobution_r4.zip")
+    parser.add_argument("--input-pack-zip", type=str, default="retrobution_r5.zip")
     parser.add_argument("--resource-dir", type=str, default="resources")
     parser.add_argument(
         "--google-service-account-json",

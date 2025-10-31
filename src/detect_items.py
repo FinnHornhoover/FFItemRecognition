@@ -10,6 +10,9 @@ import torch
 from torchvision import transforms
 from tqdm import tqdm
 
+MAX_WIDTH = 4096
+MAX_HEIGHT = 4096
+
 
 def distance(coords: tuple[int, int, int, int]) -> float:
     """
@@ -523,7 +526,9 @@ def adjust_homography_to_view(image_shape: tuple[int, ...], H: np.ndarray) -> tu
     # Adjusted homography
     H_adjusted = T @ H
 
-    new_size = (max_x - min_x, max_y - min_y)
+    new_width = min(max_x - min_x, MAX_WIDTH)
+    new_height = min(max_y - min_y, MAX_HEIGHT)
+    new_size = (new_width, new_height)
     return H_adjusted, new_size
 
 
