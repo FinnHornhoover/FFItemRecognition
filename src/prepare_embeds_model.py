@@ -365,7 +365,7 @@ def main() -> None:
     parser.add_argument(
         "--output-labels-path", type=str, default="item-recognition-web/src/labels"
     )
-    parser.add_argument("--input-pack-zip", type=str, default="retrobution_r6.zip")
+    parser.add_argument("--input-pack-zip", type=str, default="retrobution_r7.zip")
     parser.add_argument("--resource-dir", type=str, default="resources")
     parser.add_argument(
         "--google-service-account-json",
