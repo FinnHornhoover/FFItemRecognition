@@ -15,8 +15,8 @@ import torch
 from torchvision import models, transforms
 from tqdm import tqdm
 
-REPO_RELEASE_URL = (
-    "https://github.com/FinnHornhoover/FFInfoPacks/releases/latest/download"
+REPO_RELEASE_API_URL = (
+    "https://api.github.com/repos/FinnHornhoover/FFInfoPacks/releases/latest"
 )
 PRICE_GUIDE_URL = "https://docs.google.com/spreadsheets/d/15ObDHwLa7rrd0b54RLJCJEsEIEtUHnEjtqV3kQBUCu4"
 
@@ -43,6 +43,26 @@ async def download_file(url: str, path: Path) -> None:
             async with aiofiles.open(path, "wb") as f:
                 async for chunk in stream.aiter_bytes(chunk_size=(1 << 16)):
                     await f.write(chunk)
+
+
+def get_latest_retrobution_pack_zip_name_and_url() -> tuple[str, str]:
+    """
+    Gets the name and URL of the latest Retrobution pack zip.
+
+    Returns
+    -------
+    zip_name : str
+        The name of the latest Retrobution pack zip.
+    zip_url : str
+        The URL of the latest Retrobution pack zip.
+    """
+    response = httpx.get(REPO_RELEASE_API_URL)
+    response.raise_for_status()
+    assets = response.json()["assets"]
+    for asset in assets:
+        if "retrobution" in asset["name"]:
+            return asset["name"], asset["browser_download_url"]
+    raise ValueError("No Retrobution pack zip found!")
 
 
 def construct_index_and_embedder(
@@ -365,7 +385,6 @@ def main() -> None:
     parser.add_argument(
         "--output-labels-path", type=str, default="item-recognition-web/src/labels"
     )
-    parser.add_argument("--input-pack-zip", type=str, default="retrobution_r8.zip")
     parser.add_argument("--resource-dir", type=str, default="resources")
     parser.add_argument(
         "--google-service-account-json",
@@ -374,23 +393,27 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    pack_path = Path(args.input_pack_zip)
+    pack_zip_name, pack_zip_url = get_latest_retrobution_pack_zip_name_and_url()
+    pack_path = Path(pack_zip_name)
     resource_path = Path(args.resource_dir)
     output_embeddings_path = Path(args.output_embeddings_path)
     output_model_path = Path(args.output_model_path)
     output_labels_path = Path(args.output_labels_path)
 
     # download the pack zip
-    pack_path.parent.mkdir(parents=True, exist_ok=True)
     pack_zip_path = pack_path
     pack_dir_path = (
-        pack_path.parent / f"unpacked_{pack_path.relative_to(pack_path.parent).stem}"
+        pack_path.parent / f"unpacked_{pack_zip_name.split('.')[0]}"
     )
 
     if not pack_dir_path.is_dir():
+        for existing_pack_dir in pack_zip_path.parent.glob("unpacked_*"):
+            if existing_pack_dir.is_dir():
+                shutil.rmtree(existing_pack_dir)
+
         print(f"Downloading pack zip to {pack_zip_path}...")
         asyncio.run(
-            download_file(f"{REPO_RELEASE_URL}/{args.input_pack_zip}", pack_zip_path)
+            download_file(pack_zip_url, pack_zip_path)
         )
 
         # unzip the pack zip
