@@ -66,3 +66,77 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.modal-close-btn.modal-close-btn-left {
+  left: auto;
+  right: 16px;
+}
+
+.reset-modal {
+  padding-top: 40px;
+}
+
+.reset-modal-options {
+  margin-bottom: 16px;
+}
+
+.reset-modal-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.reset-modal-option input {
+  cursor: pointer;
+}
+
+.reset-modal-percent {
+  margin-bottom: 16px;
+}
+
+.reset-modal-percent-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reset-modal-percent-input {
+  width: 80px;
+  padding: 8px;
+  border: 1.5px solid #bbb;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  box-sizing: border-box;
+  background: transparent;
+  color: inherit;
+}
+
+.reset-modal-percent-input:focus {
+  border-color: #646cff;
+}
+
+.reset-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.reset-modal-ok-btn {
+  padding: 10px 24px;
+  background-color: #646cff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.reset-modal-ok-btn:hover {
+  background-color: #535bf2;
+}

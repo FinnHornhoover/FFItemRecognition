@@ -17,6 +17,10 @@ function App() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [resetPricesTrigger, setResetPricesTrigger] = useState(0); // for resetting prices
+  const [showResetPricesModal, setShowResetPricesModal] = useState(false);
+  const [resetPriceOption, setResetPriceOption] = useState('at'); // 'below', 'at', 'above'
+  const [resetPricePercent, setResetPricePercent] = useState('');
+  const [resetPriceConfig, setResetPriceConfig] = useState({ option: 'at', percent: 0 });
 
   useEffect(() => {
     loadModel('/embedder.onnx');
@@ -123,7 +127,43 @@ function App() {
   };
 
   const handleResetPrices = () => {
+    setShowResetPricesModal(true);
+  };
+
+  const handleResetPricesConfirm = () => {
+    // Validate percentage if needed
+    let percent = 0;
+    if (resetPriceOption === 'below' || resetPriceOption === 'above') {
+      const parsed = parseFloat(resetPricePercent);
+      if (isNaN(parsed) || !isFinite(parsed)) {
+        alert('Please enter a percentage value!');
+        return;
+      }
+      if (parsed < 0) {
+        alert('Percentage cannot be negative!');
+        return;
+      }
+      if (parsed > 100 && resetPriceOption === 'below') {
+        alert('Price cannot be cheaper than 0% of the original price.');
+        return;
+      }
+      if (parsed > 10000 && resetPriceOption === 'above') {
+        alert('Price cannot be more expensive than +10000% of the original price.');
+        return;
+      }
+      percent = Math.max(parsed, 0);
+    }
+    percent = resetPriceOption === 'at' ? 0 : percent;
+    const config = { option: resetPriceOption, percent };
+    setResetPriceConfig(config);
     setResetPricesTrigger(t => t + 1); // trigger price reset in ItemInventory
+    setShowResetPricesModal(false);
+  };
+
+  const handleResetPricesCancel = () => {
+    setShowResetPricesModal(false);
+    setResetPriceOption('at');
+    setResetPricePercent('');
   };
 
   const handleExportImage = () => {
@@ -367,7 +407,85 @@ function App() {
           </div>
         </div>
       )}
-      <ItemInventory key={inventoryKey} newResults={newResults} onInventoryChange={setCurrentInventory} resetPricesTrigger={resetPricesTrigger} />
+
+      {showResetPricesModal && (
+        <div className="modal-overlay">
+          <div className="modal-container reset-modal">
+            <button
+              onClick={handleResetPricesCancel}
+              className="modal-close-btn modal-close-btn-left"
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h2 className="modal-title">Reset Prices</h2>
+            <div className="reset-modal-options">
+              <label className="reset-modal-option">
+                <input
+                  type="radio"
+                  name="resetPriceOption"
+                  value="below"
+                  checked={resetPriceOption === 'below'}
+                  onChange={(e) => setResetPriceOption(e.target.value)}
+                />
+                <span>Price below price guide</span>
+              </label>
+              <label className="reset-modal-option">
+                <input
+                  type="radio"
+                  name="resetPriceOption"
+                  value="at"
+                  checked={resetPriceOption === 'at'}
+                  onChange={(e) => setResetPriceOption(e.target.value)}
+                />
+                <span>Price at price guide</span>
+              </label>
+              <label className="reset-modal-option">
+                <input
+                  type="radio"
+                  name="resetPriceOption"
+                  value="above"
+                  checked={resetPriceOption === 'above'}
+                  onChange={(e) => setResetPriceOption(e.target.value)}
+                />
+                <span>Price above price guide</span>
+              </label>
+            </div>
+            {(resetPriceOption === 'below' || resetPriceOption === 'above') && (
+              <div className="reset-modal-percent">
+                <div className="reset-modal-percent-row">
+                  <span>by</span>
+                  <input
+                    type="number"
+                    value={resetPricePercent}
+                    onChange={(e) => setResetPricePercent(e.target.value)}
+                    placeholder="0"
+                    min="0"
+                    step="0.1"
+                    className="reset-modal-percent-input"
+                  />
+                  <span>percent</span>
+                </div>
+              </div>
+            )}
+            <div className="reset-modal-footer">
+              <button
+                onClick={handleResetPricesConfirm}
+                className="reset-modal-ok-btn"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <ItemInventory
+        key={inventoryKey}
+        newResults={newResults}
+        onInventoryChange={setCurrentInventory}
+        resetPricesTrigger={resetPricesTrigger}
+        resetPriceConfig={resetPriceConfig}
+      />
     </div>
     </>
   );

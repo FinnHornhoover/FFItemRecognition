@@ -38,7 +38,7 @@ function mergeResultsToInventory(prevInventory, newResults) {
   return inventory;
 }
 
-const ItemInventory = ({ newResults, onInventoryChange, resetPricesTrigger }) => {
+const ItemInventory = ({ newResults, onInventoryChange, resetPricesTrigger, resetPriceConfig }) => {
   const [inventory, setInventory] = useState([]);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
@@ -58,20 +58,30 @@ const ItemInventory = ({ newResults, onInventoryChange, resetPricesTrigger }) =>
   }, [newResults]);
 
   useEffect(() => {
-    if (resetPricesTrigger !== undefined && resetPricesTrigger > 0) {
+    if (resetPricesTrigger !== undefined && resetPricesTrigger > 0 && resetPriceConfig) {
       setInventory(prev => {
         const updated = prev.map(item => {
-          const defaultPrice = getPriceString(fromPriceString(item.itemInfo.Price || '30k'));
+          const basePrice = fromPriceString(item.itemInfo.Price || '30k');
+          let adjustedPrice = basePrice;
+
+          if (resetPriceConfig.option === 'below') {
+            adjustedPrice = basePrice * (1 - resetPriceConfig.percent / 100);
+          } else if (resetPriceConfig.option === 'above') {
+            adjustedPrice = basePrice * (1 + resetPriceConfig.percent / 100);
+          }
+          // else 'at' - use basePrice as is
+
+          const priceString = getPriceString(Math.round(adjustedPrice));
           return {
             ...item,
-            price: defaultPrice,
+            price: priceString,
             isNew: false
           };
         });
         return updated;
       });
     }
-  }, [resetPricesTrigger]);
+  }, [resetPricesTrigger, resetPriceConfig]);
 
   useEffect(() => {
     if (onInventoryChange) {
