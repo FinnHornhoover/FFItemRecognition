@@ -38,7 +38,7 @@ function mergeResultsToInventory(prevInventory, newResults) {
   return inventory;
 }
 
-const ItemInventory = ({ newResults, onInventoryChange }) => {
+const ItemInventory = ({ newResults, onInventoryChange, resetPricesTrigger }) => {
   const [inventory, setInventory] = useState([]);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
@@ -56,6 +56,22 @@ const ItemInventory = ({ newResults, onInventoryChange }) => {
       });
     }
   }, [newResults]);
+
+  useEffect(() => {
+    if (resetPricesTrigger !== undefined && resetPricesTrigger > 0) {
+      setInventory(prev => {
+        const updated = prev.map(item => {
+          const defaultPrice = getPriceString(fromPriceString(item.itemInfo.Price || '30k'));
+          return {
+            ...item,
+            price: defaultPrice,
+            isNew: false
+          };
+        });
+        return updated;
+      });
+    }
+  }, [resetPricesTrigger]);
 
   useEffect(() => {
     if (onInventoryChange) {

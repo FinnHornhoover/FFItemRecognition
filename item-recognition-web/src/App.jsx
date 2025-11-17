@@ -16,6 +16,7 @@ function App() {
   const [currentInventory, setCurrentInventory] = useState([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [resetPricesTrigger, setResetPricesTrigger] = useState(0); // for resetting prices
 
   useEffect(() => {
     loadModel('/embedder.onnx');
@@ -119,6 +120,10 @@ function App() {
   const handleClearAll = () => {
     setInventoryKey(k => k + 1); // force remount ItemInventory
     setNewResults([]);
+  };
+
+  const handleResetPrices = () => {
+    setResetPricesTrigger(t => t + 1); // trigger price reset in ItemInventory
   };
 
   const handleExportImage = () => {
@@ -320,6 +325,7 @@ function App() {
       <div className="button-group">
         <button onClick={() => setShowAddModal(true)}>Add Item</button>
         <button onClick={handleClearAll}>Clear All</button>
+        <button onClick={handleResetPrices}>Reset Prices</button>
         <button onClick={handleExportImage}>Export Image</button>
       </div>
 
@@ -361,7 +367,7 @@ function App() {
           </div>
         </div>
       )}
-      <ItemInventory key={inventoryKey} newResults={newResults} onInventoryChange={setCurrentInventory} />
+      <ItemInventory key={inventoryKey} newResults={newResults} onInventoryChange={setCurrentInventory} resetPricesTrigger={resetPricesTrigger} />
     </div>
     </>
   );
