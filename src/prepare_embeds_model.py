@@ -220,8 +220,12 @@ def construct_index_and_embedder(
             template_file = pack_dir_path / icon_name
             template_raw = cv2.imread(template_file, cv2.IMREAD_UNCHANGED)
 
-            if template_raw is None or template_raw.shape[:2] != (64, 64):
+            if template_raw is None:
+                print(f"Skipping {icon_name} because it cannot be processed!")
                 continue
+
+            if template_raw.shape[:2] != (64, 64):
+                template_raw = cv2.resize(template_raw, (64, 64), interpolation=cv2.INTER_LINEAR_EXACT)
 
             # Create mask from alpha channel and apply it
             alpha_mask = template_raw[:, :, 3] / 255.0
