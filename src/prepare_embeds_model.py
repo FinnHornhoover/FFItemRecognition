@@ -205,6 +205,7 @@ def construct_index_and_embedder(
                     int(x["Obtainable"]),
                     int("Prototype" not in x["Name"]),
                     int("KND Hoverboard" not in x["Name"]),
+                    int("Fusion TOM Helmet" not in x["Name"]),
                     x["RarityID"],
                     x["ContentLevel"],
                 ),
