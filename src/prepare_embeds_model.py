@@ -187,7 +187,7 @@ def construct_index_and_embedder(
             "Level": d["ContentLevel"],
             "Rarity": d["Rarity"],
             "Icon": d["Icon"].split("/")[-1],
-            "Price": item_prices.get(d["Name"], ""),
+            "Price": item_prices.get(d["Name"].lower(), ""),
         }
         for t, d in item_info.items()
     }
@@ -364,7 +364,7 @@ def construct_item_prices(google_service_account_json: str) -> dict[str, str]:
                     name = transform_item_name(row[header_group["name"]])
                     price = transform_item_price(row[header_group["price"]])
                     if price:
-                        item_prices[name] = price
+                        item_prices[name.lower()] = price
 
     except Exception as e:
         print(f"Error constructing item prices: {e}")
