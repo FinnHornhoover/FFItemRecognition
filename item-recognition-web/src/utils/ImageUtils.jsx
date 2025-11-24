@@ -457,16 +457,27 @@ function getSquaresFromMaskConnectedComponents(mask) {
 
   for (let i = 0; i < potentialSquares.length; i++) {
     const s1 = potentialSquares[i];
-    for (let j = 0; j < potentialSquares.length; j++) {
+    for (let j = i + 1; j < potentialSquares.length; j++) {
       const s2 = potentialSquares[j];
-      if (
-        i !== j
-        && s1.x > s2.x
-        && s1.y > s2.y
-        && s1.x + s1.width < s2.x + s2.width
-        && s1.y + s1.height < s2.y + s2.height
-      ) {
-        keepSquares[i] = false;
+      // Compute intersection area
+      const xA = Math.max(s1.x, s2.x);
+      const yA = Math.max(s1.y, s2.y);
+      const xB = Math.min(s1.x + s1.width, s2.x + s2.width);
+      const yB = Math.min(s1.y + s1.height, s2.y + s2.height);
+      const inter_w = Math.max(0, xB - xA);
+      const inter_h = Math.max(0, yB - yA);
+      const inter_area = inter_w * inter_h;
+      const area1 = s1.width * s1.height;
+      const area2 = s2.width * s2.height;
+      if (area1 > 0 && area2 > 0) {
+        const overlap_ratio = inter_area / Math.min(area1, area2);
+        if (overlap_ratio > 0.3) {
+          if (area1 < area2) {
+            keepSquares[i] = false;
+          } else {
+            keepSquares[j] = false;
+          }
+        }
       }
     }
   }

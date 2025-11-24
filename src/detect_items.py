@@ -697,10 +697,28 @@ def detect_grid_boxes_with_dominant_lines(image_corrected: np.ndarray) -> list[t
     keep_squares = [True] * len(potential_squares)
     for i, (x1, y1, w1, h1) in enumerate(potential_squares):
         for j, (x2, y2, w2, h2) in enumerate(potential_squares):
-            if i == j:
+            if i >= j:
                 continue
-            if x1 > x2 and y1 > y2 and x1 + w1 < x2 + w2 and y1 + h1 < y2 + h2:
-                keep_squares[i] = False
+            # Compute intersection area
+            xA = max(x1, x2)
+            yA = max(y1, y2)
+            xB = min(x1 + w1, x2 + w2)
+            yB = min(y1 + h1, y2 + h2)
+            inter_w = max(0, xB - xA)
+            inter_h = max(0, yB - yA)
+            inter_area = inter_w * inter_h
+            area1 = w1 * h1
+            area2 = w2 * h2
+            # Compute overlap ratio: intersection over smaller area
+            if area1 == 0 or area2 == 0:
+                continue
+            overlap_ratio = inter_area / min(area1, area2)
+            if overlap_ratio > 0.3:
+                # Keep the square with the larger area, remove the smaller
+                if area1 < area2:
+                    keep_squares[i] = False
+                elif area2 < area1:
+                    keep_squares[j] = False
 
     squares = [x for i, x in enumerate(potential_squares) if keep_squares[i]]
 
@@ -755,11 +773,28 @@ def detect_grid_boxes_with_thresholding(image: np.ndarray) -> list[tuple[int, in
     keep_squares = [True] * len(potential_squares)
     for i, (x1, y1, w1, h1) in enumerate(potential_squares):
         for j, (x2, y2, w2, h2) in enumerate(potential_squares):
-            if i == j:
+            if i >= j:
                 continue
-            if x1 > x2 and y1 > y2 and x1 + w1 < x2 + w2 and y1 + h1 < y2 + h2:
-                keep_squares[i] = False
-
+            # Compute intersection area
+            xA = max(x1, x2)
+            yA = max(y1, y2)
+            xB = min(x1 + w1, x2 + w2)
+            yB = min(y1 + h1, y2 + h2)
+            inter_w = max(0, xB - xA)
+            inter_h = max(0, yB - yA)
+            inter_area = inter_w * inter_h
+            area1 = w1 * h1
+            area2 = w2 * h2
+            # Compute overlap ratio: intersection over smaller area
+            if area1 == 0 or area2 == 0:
+                continue
+            overlap_ratio = inter_area / min(area1, area2)
+            if overlap_ratio > 0.3:
+                # Keep the square with the larger area, remove the smaller
+                if area1 < area2:
+                    keep_squares[i] = False
+                elif area2 < area1:
+                    keep_squares[j] = False
     squares = [x for i, x in enumerate(potential_squares) if keep_squares[i]]
 
     return squares
