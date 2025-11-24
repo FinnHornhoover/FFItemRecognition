@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { loadModel, getEmbedding } from './utils/ImageEmbedder';
 import { loadQuantizedEmbeddings, getNearestNeighbor } from './utils/EmbeddingIndex';
 import { preprocessImage } from './utils/ImageUtils';
+import { writePNGMetadata } from './utils/PNGMetadata';
 import ItemInventory from './components/ItemInventory';
 import icon_labels from './labels/item_label_ids.json';
 import truncated_item_info from './labels/item_info_truncated.json';
@@ -202,15 +203,62 @@ function App() {
     const totalImages = itemCount;
 
     const triggerDownload = () => {
-      canvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'inventory-export.png';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          console.error('Failed to create blob from canvas');
+          return;
+        }
+        try {
+          // Build metadata string: midpoint_x::midpoint_y::quantity::price_string::...
+          const metadataParts = [];
+          let itemIndex = 0;
+          for (let row = 0; row < rows && itemIndex < itemCount; row++) {
+            for (let col = 0; col < cols && itemIndex < itemCount; col++) {
+              const item = currentInventory[itemIndex];
+              if (item && item.label && item.label !== '00::0000') {
+                const x = col * (itemWidth + gap);
+                const y = row * (itemHeight + gap);
+                const midpointX = Math.round(x + itemWidth / 2);
+                const midpointY = Math.round(y + itemHeight / 2);
+                const quantity = item.quantity || 1;
+                const price = item.price || '30k';
+                metadataParts.push(`${midpointX}::${midpointY}::${quantity}::${price}`);
+              }
+              itemIndex++;
+            }
+          }
+          const metadataString = metadataParts.join('::');
+
+          // Convert blob to ArrayBuffer, add metadata, then create new blob
+          const arrayBuffer = await blob.arrayBuffer();
+
+          let blobWithMetadata;
+          if (metadataString && metadataParts.length > 0) {
+            blobWithMetadata = writePNGMetadata(arrayBuffer, metadataString);
+          } else {
+            blobWithMetadata = blob;
+          }
+
+          const url = URL.createObjectURL(blobWithMetadata);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'inventory-export.png';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          console.error('Error adding metadata to image:', error);
+          // Fallback: download without metadata
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'inventory-export.png';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
       });
     };
 

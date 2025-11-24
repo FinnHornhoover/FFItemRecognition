@@ -1,5 +1,6 @@
 import { createWorker, PSM } from 'tesseract.js';
 import { fromPriceString } from './PriceConversion';
+import { readPNGMetadata } from './PNGMetadata';
 
 const MAX_WIDTH = 4096;
 const MAX_HEIGHT = 4096;
@@ -587,25 +588,95 @@ function findSquaresDominantLines(src) {
   return squares;
 }
 
-async function findSquares(src) {
+function assignMetadataToSquares(squares, metadataArray) {
+  const assignment = new Map();
+  const usedMetadata = new Set();
+
+  // Calculate square midpoints
+  const squareMidpoints = squares.map(square => ({
+    x: square.x + square.width / 2,
+    y: square.y + square.height / 2,
+  }));
+
+  // For each square, find the closest unassigned metadata entry
+  for (let squareIdx = 0; squareIdx < squares.length; squareIdx++) {
+    const squareMidpoint = squareMidpoints[squareIdx];
+    let closestMetadataIdx = null;
+    let closestDistance = Infinity;
+
+    for (let metaIdx = 0; metaIdx < metadataArray.length; metaIdx++) {
+      if (usedMetadata.has(metaIdx)) {
+        continue; // This metadata entry is already assigned
+      }
+
+      const metadata = metadataArray[metaIdx];
+      const dx = squareMidpoint.x - metadata.midpointX;
+      const dy = squareMidpoint.y - metadata.midpointY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestMetadataIdx = metaIdx;
+      }
+    }
+
+    // Assign the closest metadata to this square
+    if (closestMetadataIdx !== null) {
+      assignment.set(squareIdx, metadataArray[closestMetadataIdx]);
+      usedMetadata.add(closestMetadataIdx);
+    }
+  }
+
+  return assignment;
+}
+
+async function findSquares(src, metadataArray = null) {
   let filteredSquares = findSquaresThresholding(src);
 
   if (filteredSquares.length === 0) {
     filteredSquares = findSquaresDominantLines(src);
   }
 
-  const worker = await createWorker('eng');
-  await worker.setParameters({
-    tessedit_pageseg_mode: PSM.SINGLE_LINE,
-    tessedit_char_whitelist: '0123456789xkMm .',
-  });
+  // If metadata is provided, assign it to squares by closest midpoint
+  // Use metadata for any squares that can be matched (at least 1 match is valid)
+  let metadataAssignment = null;
+  if (metadataArray !== null && metadataArray.length > 0 && filteredSquares.length > 0) {
+    metadataAssignment = assignMetadataToSquares(filteredSquares, metadataArray);
+    if (metadataAssignment.size === 0) {
+      metadataAssignment = null; // No matches, don't use metadata
+    }
+  }
+
+  const hasMetadata = metadataAssignment !== null && metadataAssignment.size > 0;
 
   let squares = [];
+  let worker = null;
 
-  for (const square of filteredSquares) {
+  // Create worker if any squares need tesseract (either no metadata or some squares don't have metadata)
+  const needsTesseract = !hasMetadata || metadataAssignment.size < filteredSquares.length;
+  if (needsTesseract) {
+    worker = await createWorker('eng');
+    await worker.setParameters({
+      tessedit_pageseg_mode: PSM.SINGLE_LINE,
+      tessedit_char_whitelist: '0123456789xKkMm .',
+    });
+  }
+
+  for (let i = 0; i < filteredSquares.length; i++) {
+    const square = filteredSquares[i];
     let extraInfo = {};
 
-    if (square.y + 5 * square.height / 4 <= src.rows) {
+    if (hasMetadata && metadataAssignment.has(i)) {
+      // Use metadata if available for this square
+      const metadata = metadataAssignment.get(i);
+      if (metadata.quantity !== undefined) {
+        extraInfo.quantity = metadata.quantity;
+      }
+      if (metadata.price !== undefined) {
+        extraInfo.price = metadata.price;
+      }
+    } else if (square.y + 5 * square.height / 4 <= src.rows) {
+      // Fall back to tesseract for squares without metadata
       let roi = src.roi({x: square.x, y: square.y + square.height, width: square.width, height: square.height / 4});
       let dsize = new cv.Size(square.width * 4, square.height);
       cv.resize(roi, roi, dsize, 0, 0, cv.INTER_LINEAR);
@@ -640,7 +711,9 @@ async function findSquares(src) {
     squares.push({...square, extraInfo});
   }
 
-  await worker.terminate();
+  if (worker) {
+    await worker.terminate();
+  }
 
   return squares;
 }
@@ -677,12 +750,49 @@ function preprocessForONNX(src, rect) {
 
 export async function preprocessImage(file) {
   cv = (cv instanceof Promise) ? await cv : cv;
-  return new Promise((resolve) => {
+  return new Promise(async (resolve) => {
+    // Try to read metadata from the file
+    let metadataArray = null;
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const metadataString = readPNGMetadata(arrayBuffer);
+
+      if (metadataString) {
+        // Parse metadata: midpoint_x::midpoint_y::quantity::price_string::...
+        const parts = metadataString.split('::');
+        if (parts.length % 4 === 0) {
+          metadataArray = [];
+          for (let i = 0; i < parts.length; i += 4) {
+            const midpointX = parseFloat(parts[i]);
+            const midpointY = parseFloat(parts[i + 1]);
+            const quantity = parseInt(parts[i + 2]);
+            const priceString = parts[i + 3];
+
+            if (!isNaN(midpointX) && !isNaN(midpointY) && !isNaN(quantity) && priceString) {
+              metadataArray.push({
+                midpointX: midpointX,
+                midpointY: midpointY,
+                quantity: quantity,
+                price: fromPriceString(priceString) || fromPriceString('30k'),
+              });
+            } else {
+              // Invalid metadata entry, fall back to tesseract
+              metadataArray = null;
+              break;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Silently fall back to tesseract if metadata reading fails
+      metadataArray = null;
+    }
+
     const img = new Image();
     img.src = URL.createObjectURL(file);
     img.onload = async () => {
       const src = loadAndCorrectImage(img);
-      const squares = await findSquares(src);
+      const squares = await findSquares(src, metadataArray);
 
       let tensors = [];
       let extraInfoArray = [];
