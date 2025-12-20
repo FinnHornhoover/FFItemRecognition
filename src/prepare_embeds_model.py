@@ -65,6 +65,45 @@ def get_latest_retrobution_pack_zip_name_and_url() -> tuple[str, str]:
     raise ValueError("No Retrobution pack zip found!")
 
 
+def standardize_item_name(name: str) -> str:
+    """
+    Standardizes the item name.
+
+    Parameters
+    ----------
+    name : str
+        The name to standardize.
+
+    Returns
+    -------
+    standardized_name : str
+        The standardized name.
+    """
+    return re.sub(r"[^a-zA-Z0-9]+", "", name).lower()
+
+
+def standardize_item_price(price: str) -> str:
+    """
+    Standardizes the item price.
+
+    Parameters
+    ----------
+    price : str
+        The price to standardize.
+
+    Returns
+    -------
+    standardized_price : str
+        The standardized price.
+    """
+    return (
+        ""
+        if price.lower().strip()
+        in ["", "?", "n/a", "n / a", "tbd", "t.b.d.", "free", "0"]
+        else price.split("-")[-1].replace("+", "").strip()
+    )
+
+
 def construct_index_and_embedder(
     pack_dir_path: Path,
     resource_path: Path,
@@ -187,7 +226,7 @@ def construct_index_and_embedder(
             "Level": d["ContentLevel"],
             "Rarity": d["Rarity"],
             "Icon": d["Icon"].split("/")[-1],
-            "Price": item_prices.get(d["Name"].lower(), ""),
+            "Price": item_prices.get(standardize_item_name(d["Name"]), ""),
         }
         for t, d in item_info.items()
     }
@@ -319,23 +358,6 @@ def construct_item_prices(google_service_account_json: str) -> dict[str, str]:
     """
     item_prices = {}
 
-    def transform_item_name(name: str) -> str:
-        return (
-            re.sub(r"\s+", " ", name.split("(")[0])
-            .replace("\u2019", "'")
-            .replace("\u2018", "'")
-            .replace("'N'", "'n'")
-            .strip()
-        )
-
-    def transform_item_price(price: str) -> str:
-        return (
-            ""
-            if price.lower().strip()
-            in ["", "?", "n/a", "n / a", "tbd", "t.b.d.", "free", "0"]
-            else price.split("-")[-1].replace("+", "").strip()
-        )
-
     print(f"Constructing item prices from {PRICE_GUIDE_URL}...")
 
     try:
@@ -361,10 +383,10 @@ def construct_item_prices(google_service_account_json: str) -> dict[str, str]:
 
             for row in data[1:]:
                 for header_group in header_groups:
-                    name = transform_item_name(row[header_group["name"]])
-                    price = transform_item_price(row[header_group["price"]])
+                    name = standardize_item_name(row[header_group["name"]].split("(")[0])
+                    price = standardize_item_price(row[header_group["price"]])
                     if price:
-                        item_prices[name.lower()] = price
+                        item_prices[name] = price
 
     except Exception as e:
         print(f"Error constructing item prices: {e}")
