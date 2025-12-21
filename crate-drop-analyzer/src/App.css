@@ -158,6 +158,12 @@
   justify-content: center;
 }
 
+.item-icon-hoverable {
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+}
+
 /* Item Name */
 .item-name {
   font-weight: 500;
@@ -426,7 +432,14 @@
 /* Item Card States */
 .inventory-item-disabled {
   opacity: 0.5;
+}
+
+.inventory-item-disabled > * {
   pointer-events: none;
+}
+
+.inventory-item-disabled .item-icon-container-large {
+  pointer-events: auto !important;
 }
 
 .toggle-button {
@@ -541,4 +554,54 @@
 /* Hidden Input */
 .hidden-input {
   display: none;
+}
+
+/* Image Crop Tooltip */
+.image-crop-tooltip {
+  position: fixed;
+  z-index: 2000;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.image-crop-content {
+  position: relative;
+  background: #242424;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  border: 2px solid #00ff00;
+  pointer-events: auto;
+}
+
+.image-crop-content h3 {
+  margin: 0 0 16px 0;
+  text-align: center;
+}
+
+.image-crop-container {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.image-crop-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.image-crop-label {
+  font-size: 14px;
+  color: #888;
+  font-weight: 500;
+}
+
+.image-crop-canvas {
+  border: 2px solid #00ff00;
+  max-width: 200px;
+  max-height: 200px;
+  image-rendering: pixelated;
 }

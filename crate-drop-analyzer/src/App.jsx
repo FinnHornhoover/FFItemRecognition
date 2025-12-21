@@ -7,6 +7,150 @@ import truncated_item_info from './labels/item_info_truncated.json';
 import crate_labels from './labels/crate_labels.json';
 import './App.css'
 
+// Component to show cropped images from crate and opened images
+function ImageCropOverlay({ match, crateImage, openedImage, iconElement, onMouseEnter, onMouseLeave }) {
+  const crateCanvasRef = useRef(null);
+  const openedCanvasRef = useRef(null);
+  const overlayRef = useRef(null);
+
+  useEffect(() => {
+    if (!match || !crateImage || !openedImage || !crateImage.file || !openedImage.file) return;
+    if (!crateImage.squareCoords || !openedImage.squareCoords) return;
+    if (match.crateIndex === undefined || match.itemIndex === undefined) return;
+
+    const crateUrl = URL.createObjectURL(crateImage.file);
+    const openedUrl = URL.createObjectURL(openedImage.file);
+
+    // Load and crop crate image
+    const crateImg = new Image();
+    crateImg.onload = () => {
+      if (crateCanvasRef.current && match.crateIndex !== undefined && crateImage.squareCoords[match.crateIndex]) {
+        const canvas = crateCanvasRef.current;
+        const ctx = canvas.getContext('2d');
+        const square = crateImage.squareCoords[match.crateIndex];
+
+        if (square && square.width && square.height) {
+          canvas.width = square.width;
+          canvas.height = square.height;
+
+          ctx.drawImage(
+            crateImg,
+            square.x, square.y, square.width, square.height,
+            0, 0, square.width, square.height
+          );
+        }
+      }
+    };
+    crateImg.onerror = () => {
+      console.error('Error loading crate image');
+    };
+    crateImg.src = crateUrl;
+
+    // Load and crop opened image
+    const openedImg = new Image();
+    openedImg.onload = () => {
+      if (openedCanvasRef.current && match.itemIndex !== undefined && openedImage.squareCoords[match.itemIndex]) {
+        const canvas = openedCanvasRef.current;
+        const ctx = canvas.getContext('2d');
+        const square = openedImage.squareCoords[match.itemIndex];
+
+        if (square && square.width && square.height) {
+          canvas.width = square.width;
+          canvas.height = square.height;
+
+          ctx.drawImage(
+            openedImg,
+            square.x, square.y, square.width, square.height,
+            0, 0, square.width, square.height
+          );
+        }
+      }
+    };
+    openedImg.onerror = () => {
+      console.error('Error loading opened image');
+    };
+    openedImg.src = openedUrl;
+
+    return () => {
+      URL.revokeObjectURL(crateUrl);
+      URL.revokeObjectURL(openedUrl);
+    };
+  }, [match, crateImage, openedImage]);
+
+  // Position overlay near the icon
+  useEffect(() => {
+    if (!overlayRef.current || !iconElement) return;
+
+    const updatePosition = () => {
+      if (!overlayRef.current || !iconElement) return;
+
+      const iconRect = iconElement.getBoundingClientRect();
+      const overlay = overlayRef.current;
+
+      // Use a small delay to ensure the overlay is rendered and has dimensions
+      setTimeout(() => {
+        if (!overlayRef.current) return;
+        const overlayRect = overlayRef.current.getBoundingClientRect();
+
+        // Position to the right of the icon, or left if not enough space
+        let left = iconRect.right + 10;
+        let top = iconRect.top;
+
+        // Check if there's enough space on the right
+        if (left + overlayRect.width > window.innerWidth) {
+          left = iconRect.left - overlayRect.width - 10;
+        }
+
+        // Check if there's enough space below
+        if (top + overlayRect.height > window.innerHeight) {
+          top = window.innerHeight - overlayRect.height - 10;
+        }
+
+        // Ensure it doesn't go off screen
+        left = Math.max(10, Math.min(left, window.innerWidth - overlayRect.width - 10));
+        top = Math.max(10, top);
+
+        overlayRef.current.style.left = `${left}px`;
+        overlayRef.current.style.top = `${top}px`;
+      }, 10);
+    };
+
+    updatePosition();
+    window.addEventListener('scroll', updatePosition);
+    window.addEventListener('resize', updatePosition);
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [iconElement]);
+
+  if (!match || !crateImage || !openedImage) return null;
+
+  return (
+    <div
+      ref={overlayRef}
+      className="image-crop-tooltip"
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <div className="image-crop-content">
+        <h3>Item Preview</h3>
+        <div className="image-crop-container">
+          <div className="image-crop-item">
+            <div className="image-crop-label">Crate</div>
+            <canvas ref={crateCanvasRef} className="image-crop-canvas" />
+          </div>
+          <div className="image-crop-item">
+            <div className="image-crop-label">Item</div>
+            <canvas ref={openedCanvasRef} className="image-crop-canvas" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Component to display image with boxes drawn on detected items
 function ImageWithBoxes({ imageFile, squareCoords, matches, boxType }) {
   const canvasRef = useRef(null);
@@ -91,6 +235,9 @@ function App() {
   const [editingMatchIds, setEditingMatchIds] = useState([]);
   const [editingCrateTypeMatchId, setEditingCrateTypeMatchId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [hoveredMatchId, setHoveredMatchId] = useState(null);
+  const [hoveredIconElement, setHoveredIconElement] = useState(null);
+  const hoverTimeoutRef = useRef(null);
 
   useEffect(() => {
     loadModel('/embedder.onnx');
@@ -407,9 +554,7 @@ function App() {
     : null;
 
   const handleCopyTSV = () => {
-    navigator.clipboard.writeText(tsvText).then(() => {
-      alert('Copied to clipboard!');
-    }).catch(err => {
+    navigator.clipboard.writeText(tsvText).catch(err => {
       console.error('Failed to copy:', err);
       // Fallback: select text
       const textarea = document.querySelector('textarea[readonly]');
@@ -603,7 +748,23 @@ function App() {
                   >
                     {match.disabled ? '✓' : '×'}
                   </button>
-                  <div className="item-icon-container-large">
+                  <div
+                    className="item-icon-container-large item-icon-hoverable"
+                    onMouseEnter={(e) => {
+                      if (hoverTimeoutRef.current) {
+                        clearTimeout(hoverTimeoutRef.current);
+                        hoverTimeoutRef.current = null;
+                      }
+                      setHoveredMatchId(match.id);
+                      setHoveredIconElement(e.currentTarget);
+                    }}
+                    onMouseLeave={() => {
+                      hoverTimeoutRef.current = setTimeout(() => {
+                        setHoveredMatchId(null);
+                        setHoveredIconElement(null);
+                      }, 100);
+                    }}
+                  >
                     <img
                       src={`/icons/${match.itemInfo.Icon}`}
                       alt={match.itemInfo.Name}
@@ -640,6 +801,33 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Image Crop Overlay */}
+      {hoveredMatchId !== null && crateImage && openedImage && hoveredIconElement && (() => {
+        const hoveredMatch = matches.find(m => m.id === hoveredMatchId);
+        if (!hoveredMatch || hoveredMatch.crateIndex === undefined || hoveredMatch.itemIndex === undefined) {
+          return null;
+        }
+        return (
+          <ImageCropOverlay
+            match={hoveredMatch}
+            crateImage={crateImage}
+            openedImage={openedImage}
+            iconElement={hoveredIconElement}
+            onMouseEnter={() => {
+              // Keep overlay visible when hovering over it
+              if (hoverTimeoutRef.current) {
+                clearTimeout(hoverTimeoutRef.current);
+                hoverTimeoutRef.current = null;
+              }
+            }}
+            onMouseLeave={() => {
+              setHoveredMatchId(null);
+              setHoveredIconElement(null);
+            }}
+          />
+        );
+      })()}
 
       {/* TSV Textbox */}
       {tsvText && (
