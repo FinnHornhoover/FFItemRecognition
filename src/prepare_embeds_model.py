@@ -45,22 +45,27 @@ async def download_file(url: str, path: Path) -> None:
                     await f.write(chunk)
 
 
-def get_latest_retrobution_pack_zip_name_and_url() -> tuple[str, str]:
+def get_latest_pack_zip_name_and_url(pack_name: str) -> tuple[str, str]:
     """
-    Gets the name and URL of the latest Retrobution pack zip.
+    Gets the name and URL of the latest pack zip.
+
+    Parameters
+    ----------
+    pack_name : str
+        The name of the pack to search for.
 
     Returns
     -------
     zip_name : str
-        The name of the latest Retrobution pack zip.
+        The name of the latest pack zip.
     zip_url : str
-        The URL of the latest Retrobution pack zip.
+        The URL of the latest pack zip.
     """
     response = httpx.get(REPO_RELEASE_API_URL)
     response.raise_for_status()
     assets = response.json()["assets"]
     for asset in assets:
-        if "retrobution" in asset["name"]:
+        if pack_name in asset["name"]:
             return asset["name"], asset["browser_download_url"]
     raise ValueError("No Retrobution pack zip found!")
 
@@ -111,6 +116,7 @@ def construct_index_and_embedder(
     output_model_path: Path,
     output_labels_path: Path,
     item_prices: dict[str, str],
+    output_crate_embeddings_path: Path | None,
 ) -> None:
     """
     Constructs the index and embedder for the icons.
@@ -129,6 +135,8 @@ def construct_index_and_embedder(
         The path to the output labels directory.
     item_prices : dict[str, str]
         A dictionary of item names and their prices.
+    output_crate_embeddings_path : Path | None
+        The path to the output crate embeddings directory, if None, crate embeddings will not be exported.
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -166,9 +174,29 @@ def construct_index_and_embedder(
         ]
     )
 
+    # Load and process crate templates
+    crate_embeddings = []
+    crate_labels = []
+
     # Load and process templates
     template_embeddings = []
     template_label_ids = []
+
+    def add_crate_embedding(image: np.ndarray, label: str) -> None:
+        """
+        Adds a crate embedding to the list of crate embeddings.
+
+        Parameters
+        ----------
+        image : np.ndarray
+            The image to add the embedding to.
+        label : str
+            The label to add the embedding to.
+        """
+        image_tensor = preprocess_transforms(image).unsqueeze(0).to(device)
+        embedding = model(image_tensor).cpu().numpy()
+        crate_embeddings.append(embedding)
+        crate_labels.append(label)
 
     def add_embedding(image: np.ndarray, template_ids: list[str]) -> None:
         """
@@ -208,7 +236,22 @@ def construct_index_and_embedder(
     )
     null_img = np.zeros_like(background_img)
 
+    crate_image_names = {
+        "Standard": "generalitemicon_00.png",
+        "Special": "generalitemicon_01.png",
+        "Sooper": "generalitemicon_02.png",
+        "Sooper Dooper": "generalitemicon_03.png",
+        "Mission": "generalitemicon_44.png",
+        "Egg": "generalitemicon_04.png",
+    }
+
     with torch.no_grad():
+        if output_crate_embeddings_path is not None:
+            for crate_type, crate_image_name in crate_image_names.items():
+                crate_img = cv2.imread(pack_dir_path / "icons" / crate_image_name, cv2.IMREAD_COLOR)
+                crate_img = cv2.cvtColor(crate_img, cv2.COLOR_BGR2RGB)
+                add_crate_embedding(crate_img, crate_type)
+
         add_embedding(null_img, ["00::0000"])
         add_embedding(background_img, ["00::0000"])
         add_embedding(red_background_img, ["00::0000"])
@@ -317,6 +360,15 @@ def construct_index_and_embedder(
             )
             add_embedding(template_w_selected_bank_background, label_ids)
 
+    if output_crate_embeddings_path is not None:
+        crate_embeddings = np.vstack(crate_embeddings)
+
+        with open(output_labels_path / "crate_labels.json", "w") as f:
+            json.dump(crate_labels, f)
+
+        with open(output_crate_embeddings_path.with_suffix(".bin"), "wb") as f:
+                f.write(crate_embeddings.tobytes())
+
     template_embeddings = np.vstack(template_embeddings)
 
     with open(output_labels_path / "item_info_truncated.json", "w") as f:
@@ -400,17 +452,27 @@ def main() -> None:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "--project",
+        type=str,
+        default="item-recognition-web",
+    )
+    parser.add_argument(
         "--output-embeddings-path",
         type=str,
-        default="item-recognition-web/public/icon_embeddings",
+        default="public/icon_embeddings",
+    )
+    parser.add_argument(
+        "--output-crate-embeddings-path",
+        type=str,
+        default="public/crate_embeddings",
     )
     parser.add_argument(
         "--output-model-path",
         type=str,
-        default="item-recognition-web/public/embedder.onnx",
+        default="public/embedder.onnx",
     )
     parser.add_argument(
-        "--output-labels-path", type=str, default="item-recognition-web/src/labels"
+        "--output-labels-path", type=str, default="src/labels"
     )
     parser.add_argument("--resource-dir", type=str, default="resources")
     parser.add_argument(
@@ -420,12 +482,15 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    pack_zip_name, pack_zip_url = get_latest_retrobution_pack_zip_name_and_url()
+    searched_pack = "retrobution" if args.project == "item-recognition-web" else "beta-20111013"
+    pack_zip_name, pack_zip_url = get_latest_pack_zip_name_and_url(searched_pack)
+    project = Path(args.project)
     pack_path = Path(pack_zip_name)
     resource_path = Path(args.resource_dir)
-    output_embeddings_path = Path(args.output_embeddings_path)
-    output_model_path = Path(args.output_model_path)
-    output_labels_path = Path(args.output_labels_path)
+    output_embeddings_path = project / str(args.output_embeddings_path)
+    output_crate_embeddings_path = project / str(args.output_crate_embeddings_path)
+    output_model_path = project / str(args.output_model_path)
+    output_labels_path = project / str(args.output_labels_path)
 
     # download the pack zip
     pack_zip_path = pack_path
@@ -458,7 +523,7 @@ def main() -> None:
     shutil.copytree(icon_source_path, icon_dest_path)
 
     # fetch item prices if possible
-    item_prices = construct_item_prices(args.google_service_account_json)
+    item_prices = construct_item_prices(args.google_service_account_json) if args.project == "item-recognition-web" else {}
 
     # construct the index and embedder
     construct_index_and_embedder(
@@ -468,6 +533,7 @@ def main() -> None:
         output_model_path,
         output_labels_path,
         item_prices,
+        None if args.project == "item-recognition-web" else output_crate_embeddings_path,
     )
 
 

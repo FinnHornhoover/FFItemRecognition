@@ -1,6 +1,6 @@
 # Item Recognition and Shopmaking Web
 
-Retrobution shoplist website at https://retrobution-shoplist.pages.dev
+Retrobution shoplist website at https://openfusion-crate-drop-analyzer.pages.dev
 
 ## Setup
 
@@ -19,5 +19,5 @@ npm run dev
 ## Deployment
 
 ```sh
-npm run build && npx wrangler pages deploy dist/ --project-name retrobution-shoplist
+npm run build && npx wrangler pages deploy dist/ --project-name openfusion-crate-drop-analyzer
 ```

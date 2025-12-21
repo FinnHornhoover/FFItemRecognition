@@ -1,0 +1,544 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Button Group */
+.button-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  justify-content: center;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Modal Container */
+.modal-container {
+  position: relative;
+  background: #242424;
+  padding: 32px 24px 24px 24px;
+  border-radius: 16px;
+  min-width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.25);
+  width: 400px;
+  box-sizing: border-box;
+}
+
+/* Modal Close Button */
+.modal-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 1.0rem;
+  cursor: pointer;
+  color: #888;
+}
+
+/* Modal Title */
+.modal-title {
+  margin: 0 0 18px 0;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+/* Search Input */
+.search-input {
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 10px;
+  border: 1.5px solid #bbb;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+  box-sizing: border-box;
+  transition: border 0.2s;
+}
+
+.search-input:focus {
+  border: 1.5px solid #888;
+}
+
+/* No Results Message */
+.no-results {
+  color: #888;
+  text-align: center;
+  margin: 16px 0;
+}
+
+/* Search Result Item */
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #242424;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.search-result-item:hover {
+  background: #484848;
+}
+
+/* Item Icon Container */
+.item-icon-container {
+  width: 40px;
+  height: 40px;
+  background: url(/inv_empty.png) no-repeat center center;
+  background-size: contain;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-icon-container-large {
+  width: 64px;
+  height: 64px;
+  background: url(/inv_empty.png) no-repeat center center;
+  background-size: contain;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Item Name */
+.item-name {
+  font-weight: 500;
+}
+
+/* Item Details */
+.item-details {
+  color: #666;
+  font-size: 0.95em;
+  margin-left: auto;
+}
+
+/* Modal Close Button */
+.modal-close-btn-bottom {
+  margin-top: 16px;
+}
+
+/* Drag and Drop Area */
+.drag-drop-area {
+  border: 2px dashed #666;
+  border-radius: 12px;
+  padding: 15px 10px;
+  margin-bottom: 20px;
+  background: #1a1a1a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.drag-drop-area:hover {
+  border-color: #888;
+  background: #242424;
+}
+
+.drag-drop-area.drag-over {
+  border-color: #646cff;
+  background: #2a2a2a;
+  transform: scale(1.02);
+}
+
+.drag-drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.drag-drop-icon {
+  font-size: 2.5rem;
+  opacity: 0.7;
+}
+
+.drag-drop-text {
+  text-align: center;
+  color: #888;
+  line-height: 1.4;
+}
+
+.drag-drop-text strong {
+  color: #fff;
+}
+
+/* Import Warning */
+.import-warning {
+  text-align: center;
+  color: #ffa500;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background: rgba(255, 165, 0, 0.1);
+  border-radius: 6px;
+  border-left: 3px solid #ffa500;
+}
+
+.warning-asterisk {
+  color: #646cff;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  background: #242424;
+  padding: 32px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #333;
+  border-top: 4px solid #646cff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Item Inventory */
+.inventory-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.inventory-item {
+  position: relative;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 12px;
+  width: 240px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: opacity 0.2s, transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.inventory-item.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
+}
+
+.inventory-item.drag-over {
+  border-color: #646cff;
+  box-shadow: 0 0 10px rgba(100, 108, 255, 0.3);
+}
+
+.drag-handle {
+  position: absolute;
+  top: 12px;
+  left: 20px;
+  z-index: 2;
+  background: none;
+  border: none;
+  cursor: grab;
+  font-size: 16px;
+  color: #888;
+  padding: 2px;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+
+.drag-handle:hover {
+  color: #646cff;
+}
+
+.drag-handle-disabled {
+  color: #444 !important;
+  cursor: not-allowed !important;
+  opacity: 0.5;
+}
+
+.drag-handle-disabled:hover {
+  color: #444 !important;
+}
+
+.inventory-item-name {
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+.inventory-item-details {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.inventory-item-details label {
+  width: 50px;
+}
+
+.inventory-item-details input {
+  width: 60px;
+}
+
+.inventory-item-price {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.inventory-item-price label {
+  width: 50px;
+}
+
+.inventory-item-price input {
+  width: 60px;
+}
+
+/* Layout Classes */
+.drag-drop-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.drag-drop-column {
+  flex: 1;
+}
+
+.detection-info {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #666;
+}
+
+.image-display-section {
+  margin-bottom: 20px;
+}
+
+.image-display-container {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.image-display-item {
+  flex: 1;
+  min-width: 300px;
+}
+
+.results-section {
+  margin-bottom: 20px;
+}
+
+/* Canvas Wrapper */
+.canvas-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Item Card States */
+.inventory-item-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.toggle-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.toggle-button-enabled {
+  background-color: #8b0000;
+}
+
+.toggle-button-disabled {
+  background-color: #4CAF50;
+}
+
+/* Level Colors */
+.level-normal {
+  color: inherit;
+}
+
+.level-uncommon {
+  color: red;
+}
+
+/* Crate Type Colors */
+.crate-type-standard {
+  color: #808080;
+}
+
+.crate-type-special {
+  color: #ff8c00;
+}
+
+.crate-type-sooper {
+  color: #ffffff;
+}
+
+.crate-type-sooper-dooper {
+  color: #ffd700;
+}
+
+.crate-type-default {
+  color: inherit;
+}
+
+/* Button Styles */
+.edit-buttons-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  pointer-events: auto;
+}
+
+.edit-button {
+  padding: 5px 10px;
+}
+
+.edit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.edit-button:not(:disabled) {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.copy-button {
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: #646cff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
+
+/* TSV Section */
+.tsv-section {
+  margin-bottom: 20px;
+}
+
+.tsv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.tsv-header h2 {
+  margin: 0;
+}
+
+.tsv-stats {
+  margin-bottom: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.tsv-textarea {
+  width: 100%;
+  min-height: 200px;
+  font-family: monospace;
+  padding: 10px;
+  font-size: 14px;
+}
+
+/* Hidden Input */
+.hidden-input {
+  display: none;
+}
