@@ -2,6 +2,8 @@
 
 Retrobution shoplist website at https://openfusion-crate-drop-analyzer.pages.dev
 
+Latest used revision is: <code>beta-20111013_r4_academy</code>
+
 ## Setup
 
 ```sh

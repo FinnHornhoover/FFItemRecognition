@@ -2,6 +2,8 @@
 
 Retrobution shoplist website at https://retrobution-shoplist.pages.dev
 
+Latest used revision is: <code>retrobution_r12</code>
+
 ## Setup
 
 ```sh

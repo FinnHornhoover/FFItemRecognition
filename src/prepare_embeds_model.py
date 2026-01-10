@@ -3,6 +3,7 @@ import asyncio
 import json
 import re
 import shutil
+import warnings
 from collections import defaultdict
 from pathlib import Path
 
@@ -151,6 +152,7 @@ def construct_index_and_embedder(
 
     # Export the embedder model to ONNX
     print(f"Exporting embedder model to {output_model_path}...")
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
     with torch.no_grad():
         torch.onnx.export(
             model,
@@ -164,6 +166,7 @@ def construct_index_and_embedder(
             },
             opset_version=18,
         )
+    warnings.filterwarnings("default", category=DeprecationWarning)
 
     # Preprocessing transforms
     preprocess_transforms = transforms.Compose(
@@ -446,6 +449,27 @@ def construct_item_prices(google_service_account_json: str) -> dict[str, str]:
     return item_prices
 
 
+def edit_project_readme(project: str, pack_zip_name: str) -> None:
+    """
+    Edits the project README.md file to update the latest used revision.
+
+    Parameters
+    ----------
+    project : str
+        The project to edit the README.md file for.
+    pack_zip_name : str
+        The name of the pack zip to update the latest used revision to.
+    """
+    with open(project / "README.md", "r") as f:
+        readme = f.read()
+
+    revision = pack_zip_name.split('.')[0]
+    readme = re.sub(r"<code>.*?</code>", f"<code>{revision}</code>", readme)
+
+    with open(project / "README.md", "w") as f:
+        f.write(readme)
+
+
 def main() -> None:
     """
     Main function to prepare the embeddings for the icons and the ONNX model to get the embeddings.
@@ -535,6 +559,9 @@ def main() -> None:
         item_prices,
         None if args.project == "item-recognition-web" else output_crate_embeddings_path,
     )
+
+    # edit the project README.md file to update the latest used revision
+    edit_project_readme(project, pack_zip_name)
 
 
 if __name__ == "__main__":
