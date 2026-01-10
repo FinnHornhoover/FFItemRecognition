@@ -1,0 +1,76 @@
+name: Crate Drop Analyzer Update and Deploy
+
+on:
+  workflow_dispatch: # Only manually triggered
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to commit and push changes
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run prepare_embeds_model.py
+        run: |
+          python src/prepare_embeds_model.py --project crate-drop-analyzer
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions"
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Node.js
+        if: steps.check-changes.outputs.changed == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: crate-drop-analyzer/package-lock.json
+
+      - name: Install npm dependencies
+        if: steps.check-changes.outputs.changed == 'true'
+        working-directory: crate-drop-analyzer
+        run: npm ci
+
+      - name: Build project
+        if: steps.check-changes.outputs.changed == 'true'
+        working-directory: crate-drop-analyzer
+        run: npm run build
+
+      - name: Commit changes
+        if: steps.check-changes.outputs.changed == 'true'
+        run: |
+          git commit -m "chore: auto-update crate-drop-analyzer embeddings and model [skip ci]"
+          git push origin main
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.check-changes.outputs.changed == 'true'
+        working-directory: crate-drop-analyzer
+        run: |
+          npx wrangler pages deploy dist/ --project-name openfusion-crate-drop-analyzer
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
