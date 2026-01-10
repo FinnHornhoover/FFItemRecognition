@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getPriceString, fromPriceString } from '../utils/PriceConversion';
+import { getPriceString, fromPriceString, getDefaultPriceStringByRarity } from '../utils/PriceConversion';
 
 function mergeResultsToInventory(prevInventory, newResults) {
   const inventory = [...prevInventory];
@@ -17,7 +17,8 @@ function mergeResultsToInventory(prevInventory, newResults) {
   newResults.forEach(result => {
     const existing = inventory.find(item => item.label === result.label);
     const importedQuantity = result.extraInfo.quantity || 1;
-    const defaultPrice = fromPriceString(result.itemInfo.Price || '30k');
+    const defaultPriceStr = result.itemInfo.Price || getDefaultPriceStringByRarity(result.itemInfo.Rarity);
+    const defaultPrice = fromPriceString(defaultPriceStr);
     const importedPrice = getPriceString(result.extraInfo.price || defaultPrice);
 
     if (existing) {
@@ -61,7 +62,8 @@ const ItemInventory = ({ newResults, onInventoryChange, resetPricesTrigger, rese
     if (resetPricesTrigger !== undefined && resetPricesTrigger > 0 && resetPriceConfig) {
       setInventory(prev => {
         const updated = prev.map(item => {
-          const basePrice = fromPriceString(item.itemInfo.Price || '30k');
+          const defaultPriceStr = item.itemInfo.Price || getDefaultPriceStringByRarity(item.itemInfo.Rarity);
+          const basePrice = fromPriceString(defaultPriceStr);
           let adjustedPrice = basePrice;
 
           if (resetPriceConfig.option === 'below') {

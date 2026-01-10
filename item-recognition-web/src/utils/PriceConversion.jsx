@@ -30,3 +30,7 @@ export function fromPriceString(priceStr) {
     return parseFloat(lower.split('m')[0]) * 1000000;
   }
 }
+
+export function getDefaultPriceStringByRarity(rarity) {
+  return rarity === 'Ultra Rare' ? '30k' : '5k';
+}

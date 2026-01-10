@@ -221,7 +221,7 @@ function App() {
                 const midpointX = Math.round(x + itemWidth / 2);
                 const midpointY = Math.round(y + itemHeight / 2);
                 const quantity = item.quantity || 1;
-                const price = item.price || '30k';
+                const price = item.price || getDefaultPriceByRarity(item.itemInfo.Rarity);
                 metadataParts.push(`${midpointX}::${midpointY}::${quantity}::${price}`);
               }
               itemIndex++;
@@ -270,7 +270,7 @@ function App() {
       const drawItemContent = () => {
         // Draw quantity and price text
         const quantityText = `${item.quantity || 1}x`;
-        const priceText = item.price || '30k';
+        const priceText = item.price || getDefaultPriceByRarity(item.itemInfo.Rarity);
 
         ctx.fillText(quantityText, x + 2, y + 76);
         const priceTextWidth = ctx.measureText(priceText).width;
