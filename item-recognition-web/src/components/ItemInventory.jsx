@@ -39,8 +39,8 @@ function mergeResultsToInventory(prevInventory, newResults) {
   return inventory;
 }
 
-const ItemInventory = ({ newResults, onInventoryChange, resetPricesTrigger, resetPriceConfig }) => {
-  const [inventory, setInventory] = useState([]);
+const ItemInventory = ({ initialInventory = [], newResults, onInventoryChange, resetPricesTrigger, resetPriceConfig }) => {
+  const [inventory, setInventory] = useState(Array.isArray(initialInventory) && initialInventory.length > 0 ? initialInventory : []);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
 
