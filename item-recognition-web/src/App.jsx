@@ -3,37 +3,36 @@ import { loadModel, getEmbedding } from './utils/ImageEmbedder';
 import { loadQuantizedEmbeddings, getNearestNeighbor } from './utils/EmbeddingIndex';
 import { preprocessImage } from './utils/ImageUtils';
 import { writePNGMetadata } from './utils/PNGMetadata';
-import { getCookie, setCookie } from './utils/Cookies';
+import {
+  parseInventoryCookie,
+  dumpInventoryCookie,
+  getInventorySerialized,
+  setInventorySerialized,
+} from './utils/Cookies';
 import ItemInventory from './components/ItemInventory';
 import icon_labels from './labels/item_label_ids.json';
 import truncated_item_info from './labels/item_info_truncated.json';
 import './App.css'
 
-const INVENTORY_COOKIE_NAME = 'retrobution_inventory';
-
-function parseInventoryFromCookie() {
-  const raw = getCookie(INVENTORY_COOKIE_NAME);
+function loadInventoryFromCookie() {
+  const raw = getInventorySerialized();
   if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length === 0) return [];
-    return parsed
-      .map(({ label, quantity, price }) => {
-        const itemInfo = truncated_item_info[label];
-        if (!itemInfo) return null;
-        return {
-          label,
-          itemInfo,
-          quantity: typeof quantity === 'number' ? quantity : 1,
-          price: typeof price === 'string' ? price : '5k',
-          updateTime: Date.now(),
-          isNew: false,
-        };
-      })
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
+  const rows = parseInventoryCookie(raw);
+  if (rows.length === 0) return [];
+  return rows
+    .map(({ label, quantity, price }) => {
+      const itemInfo = truncated_item_info[label];
+      if (!itemInfo) return null;
+      return {
+        label,
+        itemInfo,
+        quantity: typeof quantity === 'number' ? quantity : 1,
+        price: typeof price === 'string' ? price : '5k',
+        updateTime: Date.now(),
+        isNew: false,
+      };
+    })
+    .filter(Boolean);
 }
 
 function App() {
@@ -42,8 +41,8 @@ function App() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [inventoryKey, setInventoryKey] = useState(0); // for resetting inventory
-  const [currentInventory, setCurrentInventory] = useState([]);
-  const [initialInventoryFromCookie, setInitialInventoryFromCookie] = useState(() => parseInventoryFromCookie());
+  const [currentInventory, setCurrentInventory] = useState(() => loadInventoryFromCookie());
+  const [initialInventoryFromCookie, setInitialInventoryFromCookie] = useState(() => loadInventoryFromCookie());
   const [isDragOver, setIsDragOver] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [resetPricesTrigger, setResetPricesTrigger] = useState(0); // for resetting prices
@@ -68,7 +67,7 @@ function App() {
       quantity: quantity || 1,
       price: price || '5k',
     }));
-    setCookie(INVENTORY_COOKIE_NAME, JSON.stringify(payload));
+    setInventorySerialized(dumpInventoryCookie(payload));
   }, [currentInventory]);
 
   const handleEmbedReady = async (tensors) => {
@@ -163,6 +162,7 @@ function App() {
 
   const handleClearAll = () => {
     setInitialInventoryFromCookie([]);
+    setCurrentInventory([]);
     setInventoryKey(k => k + 1); // force remount ItemInventory
     setNewResults([]);
   };
