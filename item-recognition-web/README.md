@@ -2,7 +2,7 @@
 
 Retrobution shoplist website at https://retrobution-shoplist.pages.dev
 
-Latest used revision is: <code>retrobution_r28</code>
+Latest used revision is: <code>retrobution_r29</code>
 
 ## Setup
 
